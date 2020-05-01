@@ -14,7 +14,9 @@ import rz.demo.boot.data.envers.author.Author;
 import rz.demo.boot.data.envers.author.AuthorRepository;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,8 +78,9 @@ public class BookRepositoryRevisionsTest {
 
     @Test
     public void updateIncreasesRevisionNumber() {
-        author.setName("Ramon");
+        logRevision(1);
 
+        author.setName("Ramon");
         authorRepository.save(author);
 
         Optional<Revision<Integer, Author>> authorRevision = authorRepository.findLastChangeRevision(author.getId());
@@ -95,8 +98,8 @@ public class BookRepositoryRevisionsTest {
 
         book.setTitle("If");
         book.setAuthorObject(author);
-
         repository.save(book);
+        logRevision(2);
 
         Optional<Revision<Integer, Book>> revision = repository.findLastChangeRevision(book.getId());
 
@@ -114,6 +117,26 @@ public class BookRepositoryRevisionsTest {
                             .isEqualTo("Ramon");
                         }
                 );
+
+    }
+
+    private void logRevision(Integer logNr) {
+        System.out.println("LOG_NO: " + logNr);
+        Revisions<Integer, Book> revisions = repository.findRevisions(book.getId());
+        revisions.forEach(reviter -> {
+            System.out.println("REV_NO: " + reviter.getRevisionNumber());
+            System.out.println("BOOK: " + reviter.getEntity());
+            System.out.println("AUTHOR: " + reviter.getEntity().getAuthorObject());
+        });
+        System.out.println("LOGNO filtered: " + logNr);
+        Stream<Revision<Integer, Book>> filteredRevisions = revisions.stream()
+                .filter(reviter -> reviter.getEntity().getAuthorObject() != null).distinct();
+
+        filteredRevisions.forEach( revi -> {
+            System.out.println("REV_NO: " + revi.getRevisionNumber());
+            System.out.println("BOOK: " + revi.getEntity());
+            System.out.println("AUTHOR: " + revi.getEntity().getAuthorObject());
+        });
     }
 
     @Test
@@ -130,16 +153,23 @@ public class BookRepositoryRevisionsTest {
         Revision<Integer, Book> finalRevision = iterator.next();
 
         assertThat(initialRevision)
-                .satisfies(rev ->
-                        assertThat(rev.getEntity())
-                                .extracting(Book::getId, Book::getAuthor, Book::getTitle)
-                                .containsExactly(book.getId(), book.getAuthor(), book.getTitle())
+                .satisfies(rev -> {
+                    assertThat(rev.getEntity())
+                            .extracting(Book::getId, Book::getAuthor, Book::getTitle)
+                            .containsExactly(book.getId(), book.getAuthor(), book.getTitle());
+                    assertThat(rev.getEntity().getAuthorObject())
+                            .extracting(Author::getId, Author::getName, Author::getSurName)
+                            .containsExactly(author.getId(), author.getName(), author.getSurName());
+                        }
                 );
 
         assertThat(finalRevision)
-                .satisfies(rev -> assertThat(rev.getEntity())
-                        .extracting(Book::getId, Book::getTitle, Book::getAuthor)
-                        .containsExactly(book.getId(), null, null)
+                .satisfies(rev -> {
+                    assertThat(rev.getEntity())
+                            .extracting(Book::getId, Book::getTitle, Book::getAuthor)
+                            .containsExactly(book.getId(), null, null);
+                    assertThat(rev.getEntity().getAuthorObject()).isEqualTo(null);
+                        }
                 );
     }
 }
