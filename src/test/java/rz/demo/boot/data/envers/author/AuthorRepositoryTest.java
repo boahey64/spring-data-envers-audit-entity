@@ -55,10 +55,10 @@ public class AuthorRepositoryTest {
                 .containsExactly(tuple("Rudyard", "Kipling"));
     }
 
-//    @Test
-//    public void hasAuditInformation() {
-//        assertThat(book)
-//                .extracting(Author::getCreatedBy, Author::getCreatedDate, Author::getLastModifiedBy, Author::getLastModifiedDate, Author::getVersion)
-//                .isNotNull();
-//    }
+    @Test
+    public void hasAuditInformation() {
+        assertThat(book)
+                .extracting(Author::getCreatedBy, Author::getCreatedDate, Author::getLastModifiedBy, Author::getLastModifiedDate, Author::getVersion)
+                .isNotNull();
+    }
 }

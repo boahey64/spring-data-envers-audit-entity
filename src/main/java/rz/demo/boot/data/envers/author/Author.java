@@ -14,9 +14,10 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Audited
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Author {
+public class Author extends AuditEnabledEntity {
 
     @Id
     @GeneratedValue
