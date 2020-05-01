@@ -120,6 +120,38 @@ public class BookRepositoryRevisionsTest {
 
     }
 
+    @Test
+    public void deletedItemWillHaveRevisionRetained() {
+        repository.delete(book);
+
+        Revisions<Integer, Book> revisions = repository.findRevisions(book.getId());
+
+        assertThat(revisions).hasSize(2);
+
+        Iterator<Revision<Integer, Book>> iterator = revisions.iterator();
+
+        Revision<Integer, Book> initialRevision = iterator.next();
+        Revision<Integer, Book> finalRevision = iterator.next();
+
+        assertThat(initialRevision)
+                .satisfies(rev -> {
+                    assertThat(rev.getEntity())
+                            .extracting(Book::getId, Book::getAuthor, Book::getTitle)
+                            .containsExactly(book.getId(), book.getAuthor(), book.getTitle());
+                    assertThat(rev.getEntity().getAuthorObject()).isEqualTo(null);
+                        }
+                );
+
+        assertThat(finalRevision)
+                .satisfies(rev -> {
+                    assertThat(rev.getEntity())
+                            .extracting(Book::getId, Book::getTitle, Book::getAuthor)
+                            .containsExactly(book.getId(), null, null);
+                    assertThat(rev.getEntity().getAuthorObject()).isEqualTo(null);
+                        }
+                );
+    }
+
     private void logRevision(Integer logNr) {
         System.out.println("LOG_NO: " + logNr);
         Revisions<Integer, Book> revisions = repository.findRevisions(book.getId());
@@ -139,37 +171,4 @@ public class BookRepositoryRevisionsTest {
         });
     }
 
-    @Test
-    public void deletedItemWillHaveRevisionRetained() {
-        repository.delete(book);
-
-        Revisions<Integer, Book> revisions = repository.findRevisions(book.getId());
-
-        assertThat(revisions).hasSize(2);
-
-        Iterator<Revision<Integer, Book>> iterator = revisions.iterator();
-
-        Revision<Integer, Book> initialRevision = iterator.next();
-        Revision<Integer, Book> finalRevision = iterator.next();
-
-        assertThat(initialRevision)
-                .satisfies(rev -> {
-                    assertThat(rev.getEntity())
-                            .extracting(Book::getId, Book::getAuthor, Book::getTitle)
-                            .containsExactly(book.getId(), book.getAuthor(), book.getTitle());
-                    assertThat(rev.getEntity().getAuthorObject())
-                            .extracting(Author::getId, Author::getName, Author::getSurName)
-                            .containsExactly(author.getId(), author.getName(), author.getSurName());
-                        }
-                );
-
-        assertThat(finalRevision)
-                .satisfies(rev -> {
-                    assertThat(rev.getEntity())
-                            .extracting(Book::getId, Book::getTitle, Book::getAuthor)
-                            .containsExactly(book.getId(), null, null);
-                    assertThat(rev.getEntity().getAuthorObject()).isEqualTo(null);
-                        }
-                );
-    }
 }
