@@ -10,6 +10,8 @@ import org.springframework.data.history.Revision;
 import org.springframework.data.history.Revisions;
 import org.springframework.test.context.junit4.SpringRunner;
 import rz.demo.boot.data.envers.audit.AuditRevisionEntity;
+import rz.demo.boot.data.envers.author.Author;
+import rz.demo.boot.data.envers.author.AuthorRepository;
 
 import java.util.Iterator;
 import java.util.Optional;
@@ -28,12 +30,28 @@ public class BookRepositoryRevisionsTest {
 
     private Book book;
 
+    @Autowired
+    private AuthorRepository authorRepository;
+
+    private Author author;
+
     @Before
     public void save() {
         repository.deleteAll();
 
+        author = authorRepository.save(
+                Author.builder()
+                        .name("Rudyard")
+                        .surName("Kipling")
+                        .build()
+        );
+
         book = repository.save(
-                Book.builder().author("Rudyard Kipling").title("Jungle Book").build()
+                Book.builder()
+                        .author("Rudyard Kipling")
+//                        .authorObject(author)
+                        .title("Jungle Book")
+                        .build()
         );
     }
 
@@ -58,6 +76,23 @@ public class BookRepositoryRevisionsTest {
 
     @Test
     public void updateIncreasesRevisionNumber() {
+        author.setName("Ramon");
+
+        authorRepository.save(author);
+
+        Optional<Revision<Integer, Author>> authorRevision = authorRepository.findLastChangeRevision(author.getId());
+
+        assertThat(authorRevision)
+                .isPresent()
+                .hasValueSatisfying(rev ->
+                        assertThat(rev.getRevisionNumber()).hasValue(5)
+                )
+                .hasValueSatisfying(rev ->
+                        assertThat(rev.getEntity())
+                                .extracting(Author::getName)
+                                .isEqualTo("Ramon")
+                );
+
         book.setTitle("If");
 
         repository.save(book);
@@ -67,7 +102,7 @@ public class BookRepositoryRevisionsTest {
         assertThat(revision)
                 .isPresent()
                 .hasValueSatisfying(rev ->
-                        assertThat(rev.getRevisionNumber()).hasValue(3)
+                        assertThat(rev.getRevisionNumber()).hasValue(6)
                 )
                 .hasValueSatisfying(rev ->
                         assertThat(rev.getEntity())
