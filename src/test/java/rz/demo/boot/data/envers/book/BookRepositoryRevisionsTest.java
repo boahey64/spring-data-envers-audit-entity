@@ -94,6 +94,7 @@ public class BookRepositoryRevisionsTest {
                 );
 
         book.setTitle("If");
+        book.setAuthorObject(author);
 
         repository.save(book);
 
@@ -104,10 +105,14 @@ public class BookRepositoryRevisionsTest {
                 .hasValueSatisfying(rev ->
                         assertThat(rev.getRevisionNumber()).hasValue(6)
                 )
-                .hasValueSatisfying(rev ->
-                        assertThat(rev.getEntity())
-                                .extracting(Book::getTitle)
-                                .isEqualTo("If")
+                .hasValueSatisfying(rev -> {
+                    assertThat(rev.getEntity())
+                            .extracting(Book::getTitle)
+                            .isEqualTo("If");
+                    assertThat(rev.getEntity().getAuthorObject())
+                            .extracting(Author::getName)
+                            .isEqualTo("Ramon");
+                        }
                 );
     }
 
