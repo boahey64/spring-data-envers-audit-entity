@@ -168,14 +168,14 @@ public class BookRepositoryRevisionsTest {
             System.out.println("AUTHOR: " + reviter.getEntity().getAuthorObject());
         });
         System.out.println("LOGNO filtered: " + logNr);
-        Stream<Revision<Integer, Book>> filteredRevisions = revisions.stream()
-                .filter(reviter -> reviter.getEntity().getAuthorObject() != null).distinct();
+        Optional<Revision<Integer, Book>> filteredRevision = revisions.stream()
+                .filter(reviter -> reviter.getEntity().getAuthorObject() != null).findFirst();
 
-        filteredRevisions.forEach( revi -> {
-            System.out.println("REV_NO: " + revi.getRevisionNumber());
-            System.out.println("BOOK: " + revi.getEntity());
-            System.out.println("AUTHOR: " + revi.getEntity().getAuthorObject());
-        });
+        if(filteredRevision.isPresent()) {
+            System.out.println("REV_NO filtered: " + filteredRevision.get().getRevisionNumber());
+            System.out.println("BOOK filtered: " + filteredRevision.get().getEntity());
+            System.out.println("AUTHOR filtered: " + filteredRevision.get().getEntity().getAuthorObject());
+        }
     }
 
 }
