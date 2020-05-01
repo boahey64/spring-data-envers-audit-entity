@@ -1,6 +1,7 @@
 package rz.demo.boot.data.envers.book;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,6 +118,12 @@ public class BookRepositoryRevisionsTest {
                             .isEqualTo("Ramon");
                         }
                 );
+
+        List<Book> allBooks = repository.findAll();
+
+        allBooks.get(0).setTitle("If2");
+        repository.save(allBooks.get(0));
+        logRevision(3);
 
     }
 
